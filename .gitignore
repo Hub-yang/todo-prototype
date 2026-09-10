@@ -1,0 +1,11 @@
+node_modules
+dist
+dist-ssr
+coverage
+*.local
+.DS_Store
+.vite
+.eslintcache
+
+# 头脑风暴阶段的可视化伴侣产物（本地参考用，不入库）
+.superpowers/
