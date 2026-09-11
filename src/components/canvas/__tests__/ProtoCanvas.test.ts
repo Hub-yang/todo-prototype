@@ -3,13 +3,9 @@ import { mount } from '@vue/test-utils'
 import { describe, expect, it, vi } from 'vitest'
 import ProtoCanvas from '../ProtoCanvas.vue'
 
-// 视口操作依赖真实 DOM 测量，在测试环境里用假实现替掉，
-// 本用例关心的是 GraphState → Vue Flow 元素的转换，不是视口行为。
-const fitView = vi.fn()
-vi.mock('@vue-flow/core', async (importOriginal) => {
-  const actual = await importOriginal<typeof import('@vue-flow/core')>()
-  return { ...actual, useVueFlow: () => ({ fitView }) }
-})
+// 视口实例由 VueFlow 通过 pane-ready 提供；测试里注入一个假实例，
+// 这样走的是真实的实例注入路径，而不是把整个模块 mock 掉。
+const fitBounds = vi.fn()
 
 const graph: GraphState = {
   nodes: [
@@ -20,10 +16,14 @@ const graph: GraphState = {
 }
 
 function mountCanvas(props: Record<string, unknown> = {}) {
-  return mount(ProtoCanvas, {
+  const wrapper = mount(ProtoCanvas, {
     props: { graph, ...props },
     global: { stubs: { VueFlow: true } },
   })
+  // 模拟 VueFlow 就绪，把视口实例交给组件
+  wrapper.vm.onPaneReady({ fitBounds } as never)
+  fitBounds.mockClear()
+  return wrapper
 }
 
 interface PosNode { id: string, position: { x: number, y: number }, data: { dimmed: boolean, highlighted: boolean } }
@@ -152,7 +152,7 @@ describe('protoCanvas', () => {
 
   it('节点增减时自动适配视口，避免新节点落在屏幕外', async () => {
     const w = mountCanvas()
-    fitView.mockClear()
+    fitBounds.mockClear()
 
     await w.setProps({
       graph: {
@@ -162,18 +162,18 @@ describe('protoCanvas', () => {
     })
     await w.vm.$nextTick()
 
-    expect(fitView).toHaveBeenCalled()
+    expect(fitBounds).toHaveBeenCalled()
   })
 
   it('仅数据变化（未增减节点）时不打扰视口', async () => {
     const w = mountCanvas()
     await w.vm.$nextTick()
-    fitView.mockClear()
+    fitBounds.mockClear()
 
     await w.setProps({ dimmedNodes: ['p1'] })
     await w.vm.$nextTick()
 
-    expect(fitView).not.toHaveBeenCalled()
+    expect(fitBounds).not.toHaveBeenCalled()
   })
 
   it('resetLayout 之后，先前拖动的锁定被解除', async () => {
@@ -205,9 +205,39 @@ describe('protoCanvas', () => {
     expect((w.vm.nodes as PosNode[]).find(n => n.id === 'p1')!.position).not.toEqual({ x: 999, y: 888 })
   })
 
-  it('focusNode 会把视口聚焦到指定节点', () => {
-    fitView.mockClear()
-    mountCanvas().vm.focusNode('p1')
-    expect(fitView).toHaveBeenCalledWith(expect.objectContaining({ nodes: ['p1'] }))
+  it('focusNode 用该节点的布局坐标构造边界来聚焦', () => {
+    const w = mountCanvas()
+    fitBounds.mockClear()
+    w.vm.focusNode('p1')
+
+    const [bounds] = fitBounds.mock.calls[0]
+    const expected = (w.vm.targetNodes as Array<{ id: string, position: { x: number, y: number } }>)
+      .find(n => n.id === 'p1')!
+      .position
+    expect(bounds).toMatchObject({ x: expected.x, y: expected.y })
+    expect(bounds.width).toBeGreaterThan(0)
+  })
+
+  it('highlightedEdges 会传进边 data，用于点亮整条链', () => {
+    const edges = mountCanvas({ highlightedEdges: ['e1'] }).vm.edges as Array<{ data: { highlighted: boolean } }>
+    expect(edges[0].data.highlighted).toBe(true)
+  })
+
+  it('pane-ready 之前调用视口操作不会抛错', () => {
+    const wrapper = mount(ProtoCanvas, {
+      props: { graph },
+      global: { stubs: { VueFlow: true } },
+    })
+    // 实例尚未就绪时，视口指令应安静跳过而不是崩溃
+    expect(() => wrapper.vm.resetLayout()).not.toThrow()
+    expect(() => wrapper.vm.focusNode('p1')).not.toThrow()
+    expect(() => wrapper.vm.fitAll()).not.toThrow()
+  })
+
+  it('不开启可见性裁剪，否则节点尺寸永远测不出来', () => {
+    // 该选项要靠节点尺寸判断可见性，尺寸未测量时会形成死结，
+    // 导致 fitView 算不出边界，全部视口操作静默失效
+    const w = mountCanvas()
+    expect(w.findComponent({ name: 'VueFlow' }).props('onlyRenderVisibleElements')).toBe(false)
   })
 })

@@ -1,10 +1,10 @@
 <script setup lang="ts">
-import type { Edge, Node } from '@vue-flow/core'
+import type { Edge, Node, VueFlowStore } from '@vue-flow/core'
 import type { Ref } from 'vue'
 import type { GraphState } from '~/core'
-import { useVueFlow, VueFlow } from '@vue-flow/core'
+import { VueFlow } from '@vue-flow/core'
 import { computed, nextTick, ref, watch } from 'vue'
-import { layout } from '~/core'
+import { graphBounds, layout, NODE_CELL } from '~/core'
 import ProtoEdgeComp from './ProtoEdge.vue'
 import ProtoNodeComp from './ProtoNode.vue'
 import '@vue-flow/core/dist/style.css'
@@ -13,10 +13,12 @@ const props = withDefaults(defineProps<{
   graph: GraphState
   dimmedNodes?: string[]
   highlightedNodes?: string[]
+  highlightedEdges?: string[]
   flowingEdges?: string[]
 }>(), {
   dimmedNodes: () => [],
   highlightedNodes: () => [],
+  highlightedEdges: () => [],
   flowingEdges: () => [],
 })
 
@@ -25,10 +27,33 @@ const emit = defineEmits<{
   focusRef: [nodeId: string]
 }>()
 
-const { fitView } = useVueFlow()
-
 /** 坐标由 core 的 layout 算出，不使用 Vue Flow 的自动布局 */
 const positions = computed(() => layout(props.graph))
+
+/*
+ * 视口实例只能取自 pane-ready 事件，不能用 useVueFlow() 自行创建：
+ * 后者会新建一个独立 store，而 <VueFlow> 内部用的是另一个，于是 fitView、
+ * 聚焦、重置布局全部静默失效——不报错，只是什么都不发生。
+ */
+const flow = ref<VueFlowStore | null>(null)
+
+function onPaneReady(instance: VueFlowStore) {
+  flow.value = instance
+  nextTick(() => fitAll())
+}
+
+/**
+ * 适配视口时一律走 fitBounds，边界由我们自己的布局坐标算出。
+ *
+ * 不能用 fitView：它依赖 Vue Flow 对节点的异步测量，而冷启动时节点常停在
+ * 0×0 未初始化状态，此时 fitView 算不出边界，会静默什么都不做——不报错，
+ * 只是自动适配、聚焦、重置布局全部失灵。fitBounds 接受显式边界，不受影响。
+ */
+function fitAll(padding = 0.18) {
+  const bounds = graphBounds(positions.value)
+  if (bounds.width > 0)
+    flow.value?.fitBounds(bounds, { padding })
+}
 
 /** 由 GraphState 推导出的「应有」节点列表，位置来自布局算法 */
 const targetNodes = computed<Node[]>(() => props.graph.nodes.map(node => ({
@@ -77,7 +102,7 @@ watch(targetNodes, (next) => {
   // 仅数据变化（高亮、淡化）时不动视口，避免打断用户正在看的位置。
   const idsChanged = next.length !== prevIds.size || next.some(n => !prevIds.has(n.id))
   if (idsChanged)
-    nextTick(() => fitView({ padding: 0.22 }))
+    nextTick(() => fitAll())
 }, { immediate: true, deep: true })
 
 /**
@@ -111,6 +136,7 @@ const edges = computed<Edge[]>(() => props.graph.edges.map((edge) => {
     data: {
       kind: edge.kind,
       flowing: props.flowingEdges.includes(edge.id),
+      highlighted: props.highlightedEdges.includes(edge.id),
       dimmed: props.dimmedNodes.includes(edge.source) || props.dimmedNodes.includes(edge.target),
       label,
     },
@@ -121,26 +147,35 @@ const edges = computed<Edge[]>(() => props.graph.edges.map((edge) => {
 function resetLayout() {
   draggedIds.clear()
   nodes.value = targetNodes.value.map(n => ({ ...n, position: { ...n.position } }))
-  fitView({ padding: 0.22 })
+  fitAll()
 }
 
 /** 把视口聚焦到某个节点，供「点击引用型属性行」使用 */
 function focusNode(nodeId: string) {
-  fitView({ nodes: [nodeId], padding: 0.6, duration: 400 })
+  const p = positions.value.get(nodeId)
+  if (!p)
+    return
+  flow.value?.fitBounds({ x: p.x, y: p.y, ...NODE_CELL }, { padding: 0.9 })
 }
 
-defineExpose({ nodes, edges, targetNodes, resetLayout, focusNode, markDragged, fitView })
+defineExpose({ nodes, edges, targetNodes, resetLayout, focusNode, markDragged, fitAll, onPaneReady })
 </script>
 
 <template>
   <div class="canvas-wrap">
+    <!--
+      only-render-visible-elements 必须保持关闭：它要靠节点尺寸判断可见性，
+      而尺寸尚未测量时会形成死结——节点永远停在 0×0、initialized 为 false，
+      于是 fitView 算不出边界，自动适配、聚焦、重置布局会全部静默失效。
+      将来全景场景若需要这项优化，必须等节点初始化完成后再开启。
+    -->
     <VueFlow
       v-model:nodes="nodes"
       :edges="edges"
-      :only-render-visible-elements="true"
+      :only-render-visible-elements="false"
       :min-zoom="0.2"
       :max-zoom="2"
-      fit-view-on-init
+      @pane-ready="onPaneReady"
       @node-drag-stop="e => markDragged(e.node.id)"
       @node-mouse-enter="e => emit('nodeHover', e.node.id)"
       @node-mouse-leave="() => emit('nodeHover', null)"

@@ -4,7 +4,7 @@ import { mount } from '@vue/test-utils'
 import { describe, expect, it } from 'vitest'
 import ProtoEdge from '../ProtoEdge.vue'
 
-function mountEdge(data: { kind: EdgeKind, flowing?: boolean, dimmed?: boolean, label?: string }) {
+function mountEdge(data: { kind: EdgeKind, flowing?: boolean, dimmed?: boolean, highlighted?: boolean, label?: string }) {
   return mount(ProtoEdge, {
     props: {
       id: 'e1',
@@ -14,7 +14,7 @@ function mountEdge(data: { kind: EdgeKind, flowing?: boolean, dimmed?: boolean, 
       targetY: 100,
       sourcePosition: Position.Right,
       targetPosition: Position.Top,
-      data: { flowing: false, dimmed: false, ...data },
+      data: { flowing: false, dimmed: false, highlighted: false, ...data },
     },
   })
 }
@@ -47,5 +47,13 @@ describe('protoEdge', () => {
 
   it('渲染出真实的路径元素', () => {
     expect(mountEdge({ kind: 'proto' }).find('path').exists()).toBe(true)
+  })
+
+  it('highlighted 时带上高亮标记，用于点亮整条链', () => {
+    expect(mountEdge({ kind: 'proto', highlighted: true }).find('[data-edge]').attributes('data-highlighted')).toBe('true')
+  })
+
+  it('未高亮时不带高亮标记', () => {
+    expect(mountEdge({ kind: 'proto' }).find('[data-edge]').attributes('data-highlighted')).toBe('false')
   })
 })

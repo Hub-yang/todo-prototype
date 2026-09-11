@@ -12,7 +12,7 @@ const props = defineProps<{
   targetY: number
   sourcePosition: Position
   targetPosition: Position
-  data: { kind: EdgeKind, flowing: boolean, dimmed: boolean, label?: string }
+  data: { kind: EdgeKind, flowing: boolean, dimmed: boolean, highlighted?: boolean, label?: string }
 }>()
 
 const path = computed(() => getSmoothStepPath({
@@ -41,6 +41,7 @@ const labelPos = computed(() => ({
     :data-kind="data.kind"
     :data-flowing="String(!!data.flowing)"
     :data-dimmed="String(!!data.dimmed)"
+    :data-highlighted="String(!!data.highlighted)"
     class="proto-edge"
   >
     <BaseEdge :id="id" :path="path[0]" />
@@ -76,6 +77,12 @@ const labelPos = computed(() => ({
 
 .proto-edge[data-dimmed='true'] {
   opacity: var(--focus-dim);
+}
+
+/* 被 hover 点亮的链：加辉光但不流动，流动是播放查找动画的专属语言 */
+.proto-edge[data-highlighted='true'] :deep(.vue-flow__edge-path) {
+  stroke-width: 2.4;
+  filter: drop-shadow(0 0 var(--glow-size) var(--glow-color));
 }
 
 /* 流光只在播放 traverse 时开启，静止时是实线，避免全屏一直爬行 */

@@ -86,3 +86,35 @@ export function layout(graph: GraphState, opts: LayoutOptions = {}): Map<string,
 
   return pos
 }
+
+export interface Bounds { x: number, y: number, width: number, height: number }
+
+/** 一个节点在布局中占据的名义格子尺寸，用于推算图的整体边界 */
+export const NODE_CELL = { width: 240, height: 120 }
+
+/**
+ * 由布局坐标推算整张图的边界。
+ *
+ * 视口适配必须基于这份坐标，而不是 Vue Flow 测量出的节点尺寸：
+ * 后者是异步的，冷启动时常停在 0×0，导致 fitView 算不出边界而静默失效。
+ */
+export function graphBounds(
+  positions: Map<string, { x: number, y: number }>,
+  cell: { width: number, height: number } = NODE_CELL,
+): Bounds {
+  if (positions.size === 0)
+    return { x: 0, y: 0, width: 0, height: 0 }
+
+  const points = [...positions.values()]
+  const minX = Math.min(...points.map(p => p.x))
+  const maxX = Math.max(...points.map(p => p.x))
+  const minY = Math.min(...points.map(p => p.y))
+  const maxY = Math.max(...points.map(p => p.y))
+
+  return {
+    x: minX,
+    y: minY,
+    width: maxX - minX + cell.width,
+    height: maxY - minY + cell.height,
+  }
+}
