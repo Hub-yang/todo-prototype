@@ -6,6 +6,7 @@ import { b1Lookup } from './b1-lookup'
 import { b2ChainEnd } from './b2-chain-end'
 import { b3Shadowing } from './b3-shadowing'
 import { b4ObjectCreate } from './b4-object-create'
+import { c1ClassDesugar } from './c1-class-desugar'
 
 export const scenes: Scene[] = [
   a1Literal,
@@ -15,6 +16,7 @@ export const scenes: Scene[] = [
   b2ChainEnd,
   b3Shadowing,
   b4ObjectCreate,
+  c1ClassDesugar,
 ]
 
 export function getScene(id: string): Scene | undefined {
