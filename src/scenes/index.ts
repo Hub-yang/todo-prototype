@@ -9,6 +9,7 @@ import { b4ObjectCreate } from './b4-object-create'
 import { c1ClassDesugar } from './c1-class-desugar'
 import { c2Extends } from './c2-extends'
 import { c3Instanceof } from './c3-instanceof'
+import { d1ChickenEgg } from './d1-chicken-egg'
 
 export const scenes: Scene[] = [
   a1Literal,
@@ -21,6 +22,7 @@ export const scenes: Scene[] = [
   c1ClassDesugar,
   c2Extends,
   c3Instanceof,
+  d1ChickenEgg,
 ]
 
 export function getScene(id: string): Scene | undefined {
