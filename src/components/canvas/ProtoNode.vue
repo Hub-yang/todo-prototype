@@ -38,8 +38,13 @@ function onRowClick(refTo?: string) {
     :data-kind="node.kind"
     class="proto-node"
   >
-    <!-- 目标锚点统一在顶部，来源锚点按属性行分布在右侧 -->
-    <Handle type="target" :position="Position.Top" />
+    <!--
+      两个目标锚点：纵向的原型链从顶部进入，同层的横向引用从左侧进入。
+      只留顶部锚点会让横向连线绕一大圈才能回到顶上。
+    -->
+    <Handle id="t-top" type="target" :position="Position.Top" />
+    <Handle id="t-left" type="target" :position="Position.Left" />
+    <Handle id="t-right" type="target" :position="Position.Right" />
 
     <div data-node-header class="header" @click="collapsed = !collapsed">
       <span class="sigil">{{ sigil }}</span>

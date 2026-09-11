@@ -61,6 +61,40 @@ describe('protoCanvas', () => {
     expect(edges[0].data.flowing).toBe(true)
   })
 
+  it('横向的 prototype 边从左侧进入目标，纵向的 proto 边从顶部进入', () => {
+    // 目标锚点若一律设在顶部，同层节点之间的横向连线会绕一大圈才能回到顶上
+    const g: GraphState = {
+      nodes: [
+        ...graph.nodes,
+        { id: 'Person', label: 'Person', kind: 'function' as const, props: [] },
+      ],
+      edges: [
+        { id: 'e1', source: 'p1', target: 'Person.prototype', kind: 'proto' as const },
+        { id: 'e2', source: 'Person', target: 'Person.prototype', kind: 'prototype' as const },
+      ],
+    }
+    const edges = mountCanvas({ graph: g }).vm.edges as Array<{ id: string, targetHandle: string }>
+    expect(edges.find(e => e.id === 'e1')!.targetHandle).toBe('t-top')
+    expect(edges.find(e => e.id === 'e2')!.targetHandle).toBe('t-left')
+  })
+
+  it('同层回指的 constructor 边从右侧进入，不绕到顶部', () => {
+    // Person 位于 Person.prototype 左侧，constructor 由右指向左，
+    // 若仍走顶部锚点，这条线会在图上方绕出一大片弧线
+    const g: GraphState = {
+      nodes: [
+        { id: 'Person.prototype', label: 'Person.prototype', kind: 'prototype' as const, props: [] },
+        { id: 'Person', label: 'Person', kind: 'function' as const, props: [] },
+      ],
+      edges: [
+        { id: 'e-proto', source: 'Person', target: 'Person.prototype', kind: 'prototype' as const },
+        { id: 'e-ctor', source: 'Person.prototype', target: 'Person', kind: 'constructor' as const },
+      ],
+    }
+    const edges = mountCanvas({ graph: g }).vm.edges as Array<{ id: string, targetHandle: string }>
+    expect(edges.find(e => e.id === 'e-ctor')!.targetHandle).toBe('t-right')
+  })
+
   it('proto 边带 [[Prototype]] 标签，constructor 边不带标签', () => {
     const g: GraphState = {
       nodes: graph.nodes,
@@ -74,11 +108,11 @@ describe('protoCanvas', () => {
     expect(edges[1].data.label).toBeUndefined()
   })
 
-  it('图变化时，已存在节点保留用户拖动后的位置', async () => {
+  it('用户拖动过的节点，图变化时保留其位置', async () => {
     const w = mountCanvas()
-    const nodes = w.vm.nodes as PosNode[]
-    // 模拟用户把 p1 拖到别处
-    nodes.find(n => n.id === 'p1')!.position = { x: 999, y: 888 }
+    // 只有真正经历过拖动的节点才锁定位置
+    w.vm.markDragged('p1')
+    ;(w.vm.nodes as PosNode[]).find(n => n.id === 'p1')!.position = { x: 999, y: 888 }
 
     await w.setProps({
       graph: {
@@ -90,6 +124,74 @@ describe('protoCanvas', () => {
     const after = w.vm.nodes as PosNode[]
     expect(after.find(n => n.id === 'p1')!.position).toEqual({ x: 999, y: 888 })
     expect(after.find(n => n.id === 'x')).toBeDefined()
+  })
+
+  it('没被拖动过的节点，层级变化时必须跟随新布局', async () => {
+    // 起点：孤立的 solo 没有 proto 出边，深度 0
+    const before: GraphState = {
+      nodes: [
+        { id: 'root', label: 'root', kind: 'prototype', props: [] },
+        { id: 'solo', label: 'solo', kind: 'instance', props: [] },
+      ],
+      edges: [],
+    }
+    const w = mountCanvas({ graph: before })
+    const y0 = (w.vm.nodes as PosNode[]).find(n => n.id === 'solo')!.position.y
+
+    // 接上链之后深度变为 1，纵向位置必须随之下移
+    await w.setProps({
+      graph: {
+        nodes: before.nodes,
+        edges: [{ id: 'e1', source: 'solo', target: 'root', kind: 'proto' as const }],
+      },
+    })
+
+    const y1 = (w.vm.nodes as PosNode[]).find(n => n.id === 'solo')!.position.y
+    expect(y1).toBeGreaterThan(y0)
+  })
+
+  it('节点增减时自动适配视口，避免新节点落在屏幕外', async () => {
+    const w = mountCanvas()
+    fitView.mockClear()
+
+    await w.setProps({
+      graph: {
+        ...graph,
+        nodes: [...graph.nodes, { id: 'x', label: 'x', kind: 'plain' as const, props: [] }],
+      },
+    })
+    await w.vm.$nextTick()
+
+    expect(fitView).toHaveBeenCalled()
+  })
+
+  it('仅数据变化（未增减节点）时不打扰视口', async () => {
+    const w = mountCanvas()
+    await w.vm.$nextTick()
+    fitView.mockClear()
+
+    await w.setProps({ dimmedNodes: ['p1'] })
+    await w.vm.$nextTick()
+
+    expect(fitView).not.toHaveBeenCalled()
+  })
+
+  it('resetLayout 之后，先前拖动的锁定被解除', async () => {
+    const w = mountCanvas()
+    w.vm.markDragged('p1')
+    ;(w.vm.nodes as PosNode[]).find(n => n.id === 'p1')!.position = { x: 999, y: 888 }
+
+    w.vm.resetLayout()
+    await w.vm.$nextTick()
+
+    await w.setProps({
+      graph: {
+        ...graph,
+        nodes: [...graph.nodes, { id: 'x', label: 'x', kind: 'plain' as const, props: [] }],
+      },
+    })
+
+    expect((w.vm.nodes as PosNode[]).find(n => n.id === 'p1')!.position).not.toEqual({ x: 999, y: 888 })
   })
 
   it('resetLayout 把位置恢复成布局算法的结果', async () => {

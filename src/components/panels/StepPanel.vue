@@ -57,18 +57,21 @@ const collapsed = ref(false)
 
 <style scoped>
 /* 浮层是唯一允许使用 backdrop-filter 的地方 */
+/*
+ * 靠右下角摆放，而不是底部居中：原型链的图是纵向生长的，实例节点正落在
+ * 画布中轴线的下方，居中浮层会把它盖住。
+ */
 .panel {
   position: absolute;
+  right: 20px;
   bottom: 20px;
-  left: 50%;
-  width: min(560px, calc(100% - 40px));
+  width: min(440px, calc(100% - 40px));
   padding: 12px 16px;
   border: 1px solid var(--node-border);
   border-radius: 14px;
   background: var(--panel-bg);
   backdrop-filter: blur(var(--panel-blur));
   color: var(--text-primary);
-  transform: translateX(-50%);
 }
 
 .panel[data-collapsed='true'] {
