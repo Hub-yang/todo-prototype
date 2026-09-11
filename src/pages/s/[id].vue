@@ -2,6 +2,7 @@
 import { onKeyStroke } from '@vueuse/core'
 import { computed, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import NodeSearch from '~/components/canvas/NodeSearch.vue'
 import ProtoCanvas from '~/components/canvas/ProtoCanvas.vue'
 import ExportButton from '~/components/ExportButton.vue'
 import CodePanel from '~/components/panels/CodePanel.vue'
@@ -31,6 +32,11 @@ const canvasRef = ref<InstanceType<typeof ProtoCanvas> | null>(null)
 /** 导出只截画布区域，浮层与按钮是操作界面，不该出现在配图里 */
 const canvasAreaRef = ref<HTMLElement | null>(null)
 const copied = ref(false)
+
+/** 节点多到需要检索时才出现搜索框，小场景不必被它占位 */
+const isLargeScene = computed(() => player.graph.value.nodes.length >= 12)
+const searchableNodes = computed(() =>
+  player.graph.value.nodes.map(n => ({ id: n.id, label: n.label })))
 
 /** 只有当前步声明了 traverse 才让连线流动，静止时保持实线 */
 const flowingEdges = computed(() => player.current.value?.traverse ?? [])
@@ -70,8 +76,15 @@ onKeyStroke(' ', (e) => {
         :dimmed-nodes="explore.dimmedNodes.value"
         :highlighted-nodes="explore.highlightedNodes.value"
         :highlighted-edges="explore.highlightedEdges.value"
+        :enable-visibility-culling="isLargeScene"
         @node-hover="explore.setHover"
         @focus-ref="onFocusRef"
+      />
+
+      <NodeSearch
+        v-if="isLargeScene"
+        :nodes="searchableNodes"
+        @pick="onFocusRef"
       />
     </div>
 

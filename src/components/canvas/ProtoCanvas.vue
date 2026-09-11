@@ -15,11 +15,13 @@ const props = withDefaults(defineProps<{
   highlightedNodes?: string[]
   highlightedEdges?: string[]
   flowingEdges?: string[]
+  enableVisibilityCulling?: boolean
 }>(), {
   dimmedNodes: () => [],
   highlightedNodes: () => [],
   highlightedEdges: () => [],
   flowingEdges: () => [],
+  enableVisibilityCulling: false,
 })
 
 const emit = defineEmits<{
@@ -37,8 +39,21 @@ const positions = computed(() => layout(props.graph))
  */
 const flow = ref<VueFlowStore | null>(null)
 
+/*
+ * 可见性裁剪只能在节点测量完成之后开启。
+ * 提前开启会形成死结：它要靠节点尺寸判断可见性，而尺寸尚未测出，
+ * 节点会一直停在 0×0 未初始化，导致自动适配、聚焦、重置布局全部静默失效。
+ */
+const nodesReady = ref(false)
+const cullingActive = computed(() => props.enableVisibilityCulling && nodesReady.value)
+
+function onNodesReady() {
+  nodesReady.value = true
+}
+
 function onPaneReady(instance: VueFlowStore) {
   flow.value = instance
+  instance.onNodesInitialized?.(() => onNodesReady())
   nextTick(() => fitAll())
 }
 
@@ -158,21 +173,15 @@ function focusNode(nodeId: string) {
   flow.value?.fitBounds({ x: p.x, y: p.y, ...NODE_CELL }, { padding: 0.9 })
 }
 
-defineExpose({ nodes, edges, targetNodes, resetLayout, focusNode, markDragged, fitAll, onPaneReady })
+defineExpose({ nodes, edges, targetNodes, resetLayout, focusNode, markDragged, fitAll, onPaneReady, onNodesReady })
 </script>
 
 <template>
   <div class="canvas-wrap">
-    <!--
-      only-render-visible-elements 必须保持关闭：它要靠节点尺寸判断可见性，
-      而尺寸尚未测量时会形成死结——节点永远停在 0×0、initialized 为 false，
-      于是 fitView 算不出边界，自动适配、聚焦、重置布局会全部静默失效。
-      将来全景场景若需要这项优化，必须等节点初始化完成后再开启。
-    -->
     <VueFlow
       v-model:nodes="nodes"
       :edges="edges"
-      :only-render-visible-elements="false"
+      :only-render-visible-elements="cullingActive"
       :min-zoom="0.2"
       :max-zoom="2"
       @pane-ready="onPaneReady"

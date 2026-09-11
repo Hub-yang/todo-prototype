@@ -6,6 +6,7 @@ import ProtoCanvas from '../ProtoCanvas.vue'
 // 视口实例由 VueFlow 通过 pane-ready 提供；测试里注入一个假实例，
 // 这样走的是真实的实例注入路径，而不是把整个模块 mock 掉。
 const fitBounds = vi.fn()
+const onNodesInitialized = vi.fn()
 
 const graph: GraphState = {
   nodes: [
@@ -21,7 +22,7 @@ function mountCanvas(props: Record<string, unknown> = {}) {
     global: { stubs: { VueFlow: true } },
   })
   // 模拟 VueFlow 就绪，把视口实例交给组件
-  wrapper.vm.onPaneReady({ fitBounds } as never)
+  wrapper.vm.onPaneReady({ fitBounds, onNodesInitialized } as never)
   fitBounds.mockClear()
   return wrapper
 }
@@ -234,10 +235,18 @@ describe('protoCanvas', () => {
     expect(() => wrapper.vm.fitAll()).not.toThrow()
   })
 
-  it('不开启可见性裁剪，否则节点尺寸永远测不出来', () => {
-    // 该选项要靠节点尺寸判断可见性，尺寸未测量时会形成死结，
-    // 导致 fitView 算不出边界，全部视口操作静默失效
+  it('默认不开启可见性裁剪', () => {
     const w = mountCanvas()
     expect(w.findComponent({ name: 'VueFlow' }).props('onlyRenderVisibleElements')).toBe(false)
+  })
+
+  it('即使允许裁剪，也要等节点初始化完成后才真正开启', async () => {
+    // 提前开启会与节点测量形成死结：尺寸测不出来，视口操作全部静默失效
+    const w = mountCanvas({ enableVisibilityCulling: true })
+    expect(w.findComponent({ name: 'VueFlow' }).props('onlyRenderVisibleElements')).toBe(false)
+
+    w.vm.onNodesReady()
+    await w.vm.$nextTick()
+    expect(w.findComponent({ name: 'VueFlow' }).props('onlyRenderVisibleElements')).toBe(true)
   })
 })
