@@ -10,6 +10,7 @@ import { c1ClassDesugar } from './c1-class-desugar'
 import { c2Extends } from './c2-extends'
 import { c3Instanceof } from './c3-instanceof'
 import { d1ChickenEgg } from './d1-chicken-egg'
+import { d2Builtins } from './d2-builtins'
 
 export const scenes: Scene[] = [
   a1Literal,
@@ -23,6 +24,7 @@ export const scenes: Scene[] = [
   c2Extends,
   c3Instanceof,
   d1ChickenEgg,
+  d2Builtins,
 ]
 
 export function getScene(id: string): Scene | undefined {
