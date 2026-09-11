@@ -53,8 +53,50 @@ function onNodesReady() {
 
 function onPaneReady(instance: VueFlowStore) {
   flow.value = instance
-  instance.onNodesInitialized?.(() => onNodesReady())
+  /*
+   * 不能靠 onNodesInitialized 事件来解锁裁剪：实测 Vue Flow 1.48 里节点尺寸
+   * 已经测出、store 的 areNodesInitialized 也已为 true，该事件却始终不触发，
+   * 裁剪会永远停在关闭状态。直接观察 store 上的状态才靠得住。
+   */
+  watch(() => instance.areNodesInitialized, (ok) => {
+    if (ok)
+      onNodesReady()
+  }, { immediate: true })
   nextTick(() => fitAll())
+}
+
+/**
+ * 画布四周被浮层占用的像素：左上是代码面板，右下是讲解面板与工具栏。
+ * 走查发现按图的真实边界适配时，c1/c2/d1/d3 的左上角节点会被代码面板压住；
+ * 而浮层是固定宽度，窗口越窄它占的比例越大，所以必须按视口实际尺寸换算。
+ */
+const PANEL_PX = { left: 400, top: 24, right: 24, bottom: 150 }
+
+/** 兜底比例：拿不到视口尺寸时（例如尚未测量）按 1440×900 估算 */
+const FALLBACK_VIEWPORT = { width: 1440, height: 900 }
+
+/** 安全区不得小于视口的一半，否则窄窗口下图会被压得看不清 */
+const MIN_SAFE_RATIO = 0.5
+
+function panelInset() {
+  const vw = flow.value?.dimensions?.width || FALLBACK_VIEWPORT.width
+  const vh = flow.value?.dimensions?.height || FALLBACK_VIEWPORT.height
+  const scale = (px: number, size: number) => px / size
+
+  const left = scale(PANEL_PX.left, vw)
+  const right = scale(PANEL_PX.right, vw)
+  const top = scale(PANEL_PX.top, vh)
+  const bottom = scale(PANEL_PX.bottom, vh)
+
+  const shrinkW = Math.min(1, (1 - MIN_SAFE_RATIO) / (left + right))
+  const shrinkH = Math.min(1, (1 - MIN_SAFE_RATIO) / (top + bottom))
+
+  return {
+    left: left * shrinkW,
+    right: right * shrinkW,
+    top: top * shrinkH,
+    bottom: bottom * shrinkH,
+  }
 }
 
 /**
@@ -63,11 +105,25 @@ function onPaneReady(instance: VueFlowStore) {
  * 不能用 fitView：它依赖 Vue Flow 对节点的异步测量，而冷启动时节点常停在
  * 0×0 未初始化状态，此时 fitView 算不出边界，会静默什么都不做——不报错，
  * 只是自动适配、聚焦、重置布局全部失灵。fitBounds 接受显式边界，不受影响。
+ *
+ * 传给 fitBounds 的不是图本身的边界，而是按浮层占位反推出的更大矩形，
+ * 这样图会落在中间的安全区里，不被浮层遮挡。
  */
-function fitAll(padding = 0.18) {
+function fitAll(padding = 0.06) {
   const bounds = graphBounds(positions.value)
-  if (bounds.width > 0)
-    flow.value?.fitBounds(bounds, { padding })
+  if (bounds.width <= 0)
+    return
+
+  const inset = panelInset()
+  const width = bounds.width / (1 - inset.left - inset.right)
+  const height = bounds.height / (1 - inset.top - inset.bottom)
+
+  flow.value?.fitBounds({
+    x: bounds.x - width * inset.left,
+    y: bounds.y - height * inset.top,
+    width,
+    height,
+  }, { padding })
 }
 
 /** 由 GraphState 推导出的「应有」节点列表，位置来自布局算法 */
@@ -121,13 +177,12 @@ watch(targetNodes, (next) => {
 }, { immediate: true, deep: true })
 
 /**
- * 纵向上溯的 proto 边从顶部进入目标；同层的横向引用按左右关系就近进入，
- * 否则会在图上方绕出一大片多余的弧线。
+ * 同层的边按左右关系就近进入，跨层的边从顶部进入。
+ *
+ * 这条规则对 proto 边同样适用：d1 里 Function 与 Function.prototype 处于同一层，
+ * 若强制从顶部进入，连线会折回目标上方，[[Prototype]] 标签正好压住它的标题行。
  */
-function targetHandleOf(source: string, target: string, kind: string) {
-  if (kind === 'proto')
-    return 't-top'
-
+function targetHandleOf(source: string, target: string) {
   const s = positions.value.get(source)
   const t = positions.value.get(target)
   if (s && t && s.y === t.y)
@@ -147,7 +202,7 @@ const edges = computed<Edge[]>(() => props.graph.edges.map((edge) => {
     source: edge.source,
     target: edge.target,
     sourceHandle: edge.sourceHandle,
-    targetHandle: targetHandleOf(edge.source, edge.target, edge.kind),
+    targetHandle: targetHandleOf(edge.source, edge.target),
     data: {
       kind: edge.kind,
       flowing: props.flowingEdges.includes(edge.id),

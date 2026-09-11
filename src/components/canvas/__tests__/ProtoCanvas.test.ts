@@ -1,6 +1,8 @@
 import type { GraphState } from '~/core'
 import { mount } from '@vue/test-utils'
 import { describe, expect, it, vi } from 'vitest'
+import { reactive } from 'vue'
+import { graphBounds, layout } from '~/core'
 import ProtoCanvas from '../ProtoCanvas.vue'
 
 // 视口实例由 VueFlow 通过 pane-ready 提供；测试里注入一个假实例，
@@ -248,5 +250,72 @@ describe('protoCanvas', () => {
     w.vm.onNodesReady()
     await w.vm.$nextTick()
     expect(w.findComponent({ name: 'VueFlow' }).props('onlyRenderVisibleElements')).toBe(true)
+  })
+
+  it('store 报告节点测量完成时就开启裁剪，不依赖 onNodesInitialized 事件', async () => {
+    // 实测 Vue Flow 1.48：节点尺寸已测出、areNodesInitialized 已为 true，
+    // onNodesInitialized 事件却始终不触发，只挂该事件会让裁剪永远开不起来
+    const store = reactive({ fitBounds, onNodesInitialized: vi.fn(), areNodesInitialized: false })
+    const w = mount(ProtoCanvas, {
+      props: { graph, enableVisibilityCulling: true },
+      global: { stubs: { VueFlow: true } },
+    })
+    w.vm.onPaneReady(store as never)
+    await w.vm.$nextTick()
+    expect(w.findComponent({ name: 'VueFlow' }).props('onlyRenderVisibleElements')).toBe(false)
+
+    store.areNodesInitialized = true
+    await w.vm.$nextTick()
+    expect(w.findComponent({ name: 'VueFlow' }).props('onlyRenderVisibleElements')).toBe(true)
+  })
+
+  it('自动适配时为左上代码面板与右下讲解面板让出位置', () => {
+    // 浮层压在画布之上，按图的真实边界适配会让左上、右下的节点被盖住
+    const w = mountCanvas()
+    fitBounds.mockClear()
+    w.vm.fitAll()
+
+    const [bounds] = fitBounds.mock.calls[0]
+    const raw = graphBounds(layout(graph))
+    expect(bounds.width).toBeGreaterThan(raw.width)
+    expect(bounds.height).toBeGreaterThan(raw.height)
+    expect(bounds.x).toBeLessThan(raw.x)
+    expect(bounds.y).toBeLessThan(raw.y)
+  })
+
+  it('同层的 proto 边也从侧面进入目标，避免标签压在标题行上', () => {
+    // d1 的 Function → Function.prototype 就是同层的 proto 边：
+    // 若仍从顶部进入，连线会折回目标上方，[[Prototype]] 标签正好盖住标题
+    const g: GraphState = {
+      nodes: [
+        { id: 'Function', label: 'Function', kind: 'function' as const, props: [] },
+        { id: 'Function.prototype', label: 'Function.prototype', kind: 'prototype' as const, props: [] },
+      ],
+      edges: [
+        // prototype 边会把函数节点挪到它 prototype 的同一行，于是这条 proto 边成了同层边
+        { id: 'e-fn-proto', source: 'Function', target: 'Function.prototype', kind: 'prototype' as const },
+        { id: 'e-self', source: 'Function', target: 'Function.prototype', kind: 'proto' as const },
+      ],
+    }
+    const edges = mountCanvas({ graph: g }).vm.edges as Array<{ id: string, targetHandle: string }>
+    expect(edges.find(e => e.id === 'e-self')!.targetHandle).not.toBe('t-top')
+  })
+
+  it('视口越窄，为代码面板让出的比例越大——面板是固定宽度，不随窗口缩放', () => {
+    const wide = mount(ProtoCanvas, { props: { graph }, global: { stubs: { VueFlow: true } } })
+    wide.vm.onPaneReady({ fitBounds, dimensions: { width: 1440, height: 900 } } as never)
+    fitBounds.mockClear()
+    wide.vm.fitAll()
+    const [wideBounds] = fitBounds.mock.calls[0]
+
+    const narrow = mount(ProtoCanvas, { props: { graph }, global: { stubs: { VueFlow: true } } })
+    narrow.vm.onPaneReady({ fitBounds, dimensions: { width: 1024, height: 768 } } as never)
+    fitBounds.mockClear()
+    narrow.vm.fitAll()
+    const [narrowBounds] = fitBounds.mock.calls[0]
+
+    const raw = graphBounds(layout(graph))
+    const leftRatio = (b: { x: number, width: number }) => (raw.x - b.x) / b.width
+    expect(leftRatio(narrowBounds)).toBeGreaterThan(leftRatio(wideBounds))
   })
 })
