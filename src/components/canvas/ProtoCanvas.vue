@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { Edge, Node } from '@vue-flow/core'
+import type { Ref } from 'vue'
 import type { GraphState } from '~/core'
 import { useVueFlow, VueFlow } from '@vue-flow/core'
 import { computed, ref, watch } from 'vue'
@@ -45,7 +46,9 @@ const targetNodes = computed<Node[]>(() => props.graph.nodes.map(node => ({
  * 实际渲染的节点必须是可写 ref 并用 v-model 绑定，
  * 否则用户拖动产生的位置变化没有地方落地，会被下一次重算覆盖。
  */
-const nodes = ref<Node[]>([])
+// 断言到 Ref<Node[]> 是必要的：Vue Flow 的 Node 类型嵌套极深，
+// 交给 ref 自行推导会触发 UnwrapRef 的无限递归（TS2589）。
+const nodes = ref<Node[]>([]) as Ref<Node[]>
 
 watch(targetNodes, (next) => {
   const kept = new Map(nodes.value.map(n => [n.id, n.position]))
