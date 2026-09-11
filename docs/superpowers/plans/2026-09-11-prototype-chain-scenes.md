@@ -107,7 +107,7 @@ function resolveLookup(graph: GraphState, startId: string, key: string): LookupR
   - `expectSceneIntegrity(scene: Scene): void` — 通用完整性断言，后续每个场景测试都调用它
   - `a1Literal: Scene`
 
-- [ ] **Step 1: 写测试辅助**
+- [x] **Step 1: 写测试辅助**
 
 写入 `src/scenes/__tests__/helpers.ts`：
 
@@ -158,7 +158,7 @@ export function expectSceneIntegrity(scene: Scene): void {
 }
 ```
 
-- [ ] **Step 2: 写 a1 的失败测试**
+- [x] **Step 2: 写 a1 的失败测试**
 
 写入 `src/scenes/__tests__/a1-literal.test.ts`：
 
@@ -207,12 +207,12 @@ describe('场景 a1：对象字面量的隐式原型', () => {
 })
 ```
 
-- [ ] **Step 3: 运行测试，确认失败**
+- [x] **Step 3: 运行测试，确认失败**
 
 Run: `pnpm test --run src/scenes/__tests__/a1-literal.test.ts`
 Expected: FAIL，找不到模块 `../a1-literal`。
 
-- [ ] **Step 4: 写场景数据**
+- [x] **Step 4: 写场景数据**
 
 写入 `src/scenes/a1-literal.ts`：
 
@@ -297,7 +297,7 @@ export const a1Literal: Scene = {
 }
 ```
 
-- [ ] **Step 5: 注册场景**
+- [x] **Step 5: 注册场景**
 
 修改 `src/scenes/index.ts`：
 
@@ -314,12 +314,12 @@ export function getScene(id: string): Scene | undefined {
 }
 ```
 
-- [ ] **Step 6: 运行测试，确认通过**
+- [x] **Step 6: 运行测试，确认通过**
 
 Run: `pnpm test --run src/scenes`
 Expected: PASS，a1 的 6 条断言全绿，a2 与 b1 不受影响。
 
-- [ ] **Step 7: 提交**
+- [x] **Step 7: 提交**
 
 ```bash
 git add src/scenes
@@ -340,7 +340,7 @@ git commit -m "feat(scenes): 新增对象字面量隐式原型场景与场景测
 
 这是全站最容易被讲糊的一处：两个名字长得像，含义完全不同，而且函数自己也有 `__proto__`，与它的 `prototype` 毫无关系。
 
-- [ ] **Step 1: 写失败的测试**
+- [x] **Step 1: 写失败的测试**
 
 写入 `src/scenes/__tests__/a3-prototype-vs-proto.test.ts`：
 
@@ -383,12 +383,12 @@ describe('场景 a3：prototype 与 __proto__ 的区别', () => {
 })
 ```
 
-- [ ] **Step 2: 运行测试，确认失败**
+- [x] **Step 2: 运行测试，确认失败**
 
 Run: `pnpm test --run src/scenes/__tests__/a3-prototype-vs-proto.test.ts`
 Expected: FAIL，找不到模块。
 
-- [ ] **Step 3: 写场景数据**
+- [x] **Step 3: 写场景数据**
 
 写入 `src/scenes/a3-prototype-vs-proto.ts`：
 
@@ -520,14 +520,14 @@ export const a3PrototypeVsProto: Scene = {
 }
 ```
 
-- [ ] **Step 4: 注册并运行测试**
+- [x] **Step 4: 注册并运行测试**
 
 在 `src/scenes/index.ts` 中 import `a3PrototypeVsProto` 并加入 `scenes` 数组（保持 id 字典序）。
 
 Run: `pnpm test --run src/scenes`
 Expected: PASS。
 
-- [ ] **Step 5: 提交**
+- [x] **Step 5: 提交**
 
 ```bash
 git add src/scenes
@@ -548,7 +548,7 @@ git commit -m "feat(scenes): 新增 prototype 与 __proto__ 对比场景"
 
 本场景用一个 `kind: 'null'` 的节点把链的终点画出来，让「终点」从一句话变成图上看得见的一格。
 
-- [ ] **Step 1: 写失败的测试**
+- [x] **Step 1: 写失败的测试**
 
 写入 `src/scenes/__tests__/b2-chain-end.test.ts`：
 
@@ -592,12 +592,12 @@ describe('场景 b2：链的终点是 null', () => {
 })
 ```
 
-- [ ] **Step 2: 运行测试，确认失败**
+- [x] **Step 2: 运行测试，确认失败**
 
 Run: `pnpm test --run src/scenes/__tests__/b2-chain-end.test.ts`
 Expected: FAIL，找不到模块。
 
-- [ ] **Step 3: 写场景数据**
+- [x] **Step 3: 写场景数据**
 
 写入 `src/scenes/b2-chain-end.ts`：
 
@@ -676,14 +676,14 @@ export const b2ChainEnd: Scene = {
 }
 ```
 
-- [ ] **Step 4: 注册并运行测试**
+- [x] **Step 4: 注册并运行测试**
 
 在 `src/scenes/index.ts` 中 import `b2ChainEnd` 并加入 `scenes`。
 
 Run: `pnpm test --run src/scenes`
 Expected: PASS。
 
-- [ ] **Step 5: 提交**
+- [x] **Step 5: 提交**
 
 ```bash
 git add src/scenes
@@ -704,7 +704,7 @@ git commit -m "feat(scenes): 新增原型链终点场景，把 null 画成看得
 
 这是最高频的误解：很多人以为 `p1.name = x` 会改到原型上。本场景用 `addProp` / `removeProp` 把「写操作只在实例自己身上新建属性」演出来。
 
-- [ ] **Step 1: 写失败的测试**
+- [x] **Step 1: 写失败的测试**
 
 写入 `src/scenes/__tests__/b3-shadowing.test.ts`：
 
@@ -764,12 +764,12 @@ describe('场景 b3：屏蔽（shadowing）', () => {
 })
 ```
 
-- [ ] **Step 2: 运行测试，确认失败**
+- [x] **Step 2: 运行测试，确认失败**
 
 Run: `pnpm test --run src/scenes/__tests__/b3-shadowing.test.ts`
 Expected: FAIL，找不到模块。
 
-- [ ] **Step 3: 写场景数据**
+- [x] **Step 3: 写场景数据**
 
 写入 `src/scenes/b3-shadowing.ts`：
 
@@ -867,14 +867,14 @@ export const b3Shadowing: Scene = {
 }
 ```
 
-- [ ] **Step 4: 注册并运行测试**
+- [x] **Step 4: 注册并运行测试**
 
 在 `src/scenes/index.ts` 中 import `b3Shadowing` 并加入 `scenes`。
 
 Run: `pnpm test --run src/scenes`
 Expected: PASS。
 
-- [ ] **Step 5: 提交**
+- [x] **Step 5: 提交**
 
 ```bash
 git add src/scenes
@@ -893,7 +893,7 @@ git commit -m "feat(scenes): 新增屏蔽场景，演示写操作不会上溯到
 - Consumes: Task 1 的辅助
 - Produces: `b4ObjectCreate: Scene`
 
-- [ ] **Step 1: 写失败的测试**
+- [x] **Step 1: 写失败的测试**
 
 写入 `src/scenes/__tests__/b4-object-create.test.ts`：
 
@@ -933,12 +933,12 @@ describe('场景 b4：Object.create', () => {
 })
 ```
 
-- [ ] **Step 2: 运行测试，确认失败**
+- [x] **Step 2: 运行测试，确认失败**
 
 Run: `pnpm test --run src/scenes/__tests__/b4-object-create.test.ts`
 Expected: FAIL，找不到模块。
 
-- [ ] **Step 3: 写场景数据**
+- [x] **Step 3: 写场景数据**
 
 写入 `src/scenes/b4-object-create.ts`：
 
@@ -1044,14 +1044,14 @@ export const b4ObjectCreate: Scene = {
 }
 ```
 
-- [ ] **Step 4: 注册并运行测试**
+- [x] **Step 4: 注册并运行测试**
 
 在 `src/scenes/index.ts` 中 import `b4ObjectCreate` 并加入 `scenes`。
 
 Run: `pnpm test --run src/scenes`
 Expected: PASS。
 
-- [ ] **Step 5: 提交**
+- [x] **Step 5: 提交**
 
 ```bash
 git add src/scenes
@@ -1070,7 +1070,7 @@ git commit -m "feat(scenes): 新增 Object.create 场景，含无原型对象"
 - Consumes: Task 1 的辅助
 - Produces: `c1ClassDesugar: Scene`
 
-- [ ] **Step 1: 写失败的测试**
+- [x] **Step 1: 写失败的测试**
 
 写入 `src/scenes/__tests__/c1-class-desugar.test.ts`：
 
@@ -1113,12 +1113,12 @@ describe('场景 c1：class 展开成 ES5', () => {
 })
 ```
 
-- [ ] **Step 2: 运行测试，确认失败**
+- [x] **Step 2: 运行测试，确认失败**
 
 Run: `pnpm test --run src/scenes/__tests__/c1-class-desugar.test.ts`
 Expected: FAIL，找不到模块。
 
-- [ ] **Step 3: 写场景数据**
+- [x] **Step 3: 写场景数据**
 
 写入 `src/scenes/c1-class-desugar.ts`：
 
@@ -1236,14 +1236,14 @@ export const c1ClassDesugar: Scene = {
 }
 ```
 
-- [ ] **Step 4: 注册并运行测试**
+- [x] **Step 4: 注册并运行测试**
 
 在 `src/scenes/index.ts` 中 import `c1ClassDesugar` 并加入 `scenes`。
 
 Run: `pnpm test --run src/scenes`
 Expected: PASS。
 
-- [ ] **Step 5: 提交**
+- [x] **Step 5: 提交**
 
 ```bash
 git add src/scenes
@@ -1264,7 +1264,7 @@ git commit -m "feat(scenes): 新增 class 展开场景，区分实例方法与�
 
 spec 点名这是"全网讲解最薄弱的点"：`extends` 同时连了两条链，多数教程只讲实例链，漏掉静态链，导致"子类为什么能调用父类静态方法"无法解释。
 
-- [ ] **Step 1: 写失败的测试**
+- [x] **Step 1: 写失败的测试**
 
 写入 `src/scenes/__tests__/c2-extends.test.ts`：
 
@@ -1312,12 +1312,12 @@ describe('场景 c2：extends 的双链', () => {
 })
 ```
 
-- [ ] **Step 2: 运行测试，确认失败**
+- [x] **Step 2: 运行测试，确认失败**
 
 Run: `pnpm test --run src/scenes/__tests__/c2-extends.test.ts`
 Expected: FAIL，找不到模块。
 
-- [ ] **Step 3: 写场景数据**
+- [x] **Step 3: 写场景数据**
 
 写入 `src/scenes/c2-extends.ts`：
 
@@ -1474,14 +1474,14 @@ export const c2Extends: Scene = {
 }
 ```
 
-- [ ] **Step 4: 注册并运行测试**
+- [x] **Step 4: 注册并运行测试**
 
 在 `src/scenes/index.ts` 中 import `c2Extends` 并加入 `scenes`。
 
 Run: `pnpm test --run src/scenes`
 Expected: PASS，8 条断言全绿。
 
-- [ ] **Step 5: 提交**
+- [x] **Step 5: 提交**
 
 ```bash
 git add src/scenes
@@ -1500,7 +1500,7 @@ git commit -m "feat(scenes): 新增 extends 双链场景，补上常被漏讲的
 - Consumes: Task 1 的辅助
 - Produces: `c3Instanceof: Scene`
 
-- [ ] **Step 1: 写失败的测试**
+- [x] **Step 1: 写失败的测试**
 
 写入 `src/scenes/__tests__/c3-instanceof.test.ts`：
 
@@ -1536,12 +1536,12 @@ describe('场景 c3：instanceof 原理', () => {
 })
 ```
 
-- [ ] **Step 2: 运行测试，确认失败**
+- [x] **Step 2: 运行测试，确认失败**
 
 Run: `pnpm test --run src/scenes/__tests__/c3-instanceof.test.ts`
 Expected: FAIL，找不到模块。
 
-- [ ] **Step 3: 写场景数据**
+- [x] **Step 3: 写场景数据**
 
 写入 `src/scenes/c3-instanceof.ts`：
 
@@ -1663,14 +1663,14 @@ export const c3Instanceof: Scene = {
 }
 ```
 
-- [ ] **Step 4: 注册并运行测试**
+- [x] **Step 4: 注册并运行测试**
 
 在 `src/scenes/index.ts` 中 import `c3Instanceof` 并加入 `scenes`。
 
 Run: `pnpm test --run src/scenes`
 Expected: PASS。
 
-- [ ] **Step 5: 提交**
+- [x] **Step 5: 提交**
 
 ```bash
 git add src/scenes
@@ -1691,7 +1691,7 @@ git commit -m "feat(scenes): 新增 instanceof 场景，演示沿链逐跳比对
 
 spec 称它是"全站最具视觉冲击的一帧"。注意 `Function` 的 `[[Prototype]]` 指向 `Function.prototype`——这是一条指向自身 `prototype` 属性所指对象的边，布局算法必须能安然处理。
 
-- [ ] **Step 1: 写失败的测试**
+- [x] **Step 1: 写失败的测试**
 
 写入 `src/scenes/__tests__/d1-chicken-egg.test.ts`：
 
@@ -1737,12 +1737,12 @@ describe('场景 d1：Object 与 Function 的环', () => {
 })
 ```
 
-- [ ] **Step 2: 运行测试，确认失败**
+- [x] **Step 2: 运行测试，确认失败**
 
 Run: `pnpm test --run src/scenes/__tests__/d1-chicken-egg.test.ts`
 Expected: FAIL，找不到模块。
 
-- [ ] **Step 3: 写场景数据**
+- [x] **Step 3: 写场景数据**
 
 写入 `src/scenes/d1-chicken-egg.ts`：
 
@@ -1888,21 +1888,21 @@ export const d1ChickenEgg: Scene = {
 }
 ```
 
-- [ ] **Step 4: 注册并运行测试**
+- [x] **Step 4: 注册并运行测试**
 
 在 `src/scenes/index.ts` 中 import `d1ChickenEgg` 并加入 `scenes`。
 
 Run: `pnpm test --run src/scenes`
 Expected: PASS。
 
-- [ ] **Step 5: 浏览器确认这一帧的观感**
+- [x] **Step 5: 浏览器确认这一帧的观感**
 
 ```bash
 pnpm dev
 ```
 打开 `#/s/d1`，走到最后一步，确认：四个节点与多条交叉线没有互相压住、`Function` 那两条汇向同一格的线清晰可辨。若线条打结，调整 `initial.nodes` 的数组顺序（同层节点按数组顺序横向排开）。
 
-- [ ] **Step 6: 提交**
+- [x] **Step 6: 提交**
 
 ```bash
 git add src/scenes
@@ -1923,7 +1923,7 @@ git commit -m "feat(scenes): 新增 Object 与 Function 互为原型的环形场
 
 本任务只产出数据；节点规模带来的折叠与搜索问题在 Task 11 解决。所有内置构造函数节点默认 `meta.collapsed = true`，否则一屏放不下。
 
-- [ ] **Step 1: 写失败的测试**
+- [x] **Step 1: 写失败的测试**
 
 写入 `src/scenes/__tests__/d2-builtins.test.ts`：
 
@@ -1976,12 +1976,12 @@ describe('场景 d2：内置对象全景图', () => {
 })
 ```
 
-- [ ] **Step 2: 运行测试，确认失败**
+- [x] **Step 2: 运行测试，确认失败**
 
 Run: `pnpm test --run src/scenes/__tests__/d2-builtins.test.ts`
 Expected: FAIL，找不到模块。
 
-- [ ] **Step 3: 写场景数据**
+- [x] **Step 3: 写场景数据**
 
 写入 `src/scenes/d2-builtins.ts`：
 
@@ -2115,14 +2115,14 @@ export const d2Builtins: Scene = {
 }
 ```
 
-- [ ] **Step 4: 注册并运行测试**
+- [x] **Step 4: 注册并运行测试**
 
 在 `src/scenes/index.ts` 中 import `d2Builtins` 并加入 `scenes`。
 
 Run: `pnpm test --run src/scenes`
 Expected: PASS，8 条断言全绿。注意最后一步 `traverse` 里的 `e-Arrayproto-obj` 必须与上面 `edges` 生成的 id 完全一致（`e-${b.name}proto-obj` 中 `b.name` 为 `Array`），通用完整性检查会校验这一点。
 
-- [ ] **Step 5: 提交**
+- [x] **Step 5: 提交**
 
 ```bash
 git add src/scenes
@@ -2147,7 +2147,7 @@ git commit -m "feat(scenes): 新增内置对象全景场景，默认折叠以容
 
 **风险提示：** 若实测发现开启后节点仍测不出尺寸，**不要硬扛**——把 `enableVisibilityCulling` 保持 `false` 并在 Task 14 的走查中记录实际帧率；30+ 节点在现代浏览器上通常仍然流畅，这项优化可以推迟。
 
-- [ ] **Step 1: 写搜索组件的失败测试**
+- [x] **Step 1: 写搜索组件的失败测试**
 
 写入 `src/components/canvas/__tests__/NodeSearch.test.ts`：
 
@@ -2198,12 +2198,12 @@ describe('nodeSearch', () => {
 })
 ```
 
-- [ ] **Step 2: 运行测试，确认失败**
+- [x] **Step 2: 运行测试，确认失败**
 
 Run: `pnpm test --run src/components/canvas/__tests__/NodeSearch.test.ts`
 Expected: FAIL，找不到组件。
 
-- [ ] **Step 3: 实现搜索组件**
+- [x] **Step 3: 实现搜索组件**
 
 写入 `src/components/canvas/NodeSearch.vue`：
 
@@ -2304,12 +2304,12 @@ input {
 </style>
 ```
 
-- [ ] **Step 4: 运行测试，确认通过**
+- [x] **Step 4: 运行测试，确认通过**
 
 Run: `pnpm test --run src/components/canvas/__tests__/NodeSearch.test.ts`
 Expected: PASS，5 条全绿。
 
-- [ ] **Step 5: 写可见性裁剪的失败测试**
+- [x] **Step 5: 写可见性裁剪的失败测试**
 
 在 `src/components/canvas/__tests__/ProtoCanvas.test.ts` 的 `describe` 内追加：
 
@@ -2339,12 +2339,12 @@ const onNodesInitialized = vi.fn()
 wrapper.vm.onPaneReady({ fitBounds, onNodesInitialized } as never)
 ```
 
-- [ ] **Step 6: 运行测试，确认失败**
+- [x] **Step 6: 运行测试，确认失败**
 
 Run: `pnpm test --run src/components/canvas/__tests__/ProtoCanvas.test.ts`
 Expected: FAIL，`enableVisibilityCulling` 与 `onNodesReady` 尚不存在。
 
-- [ ] **Step 7: 实现延迟开启**
+- [x] **Step 7: 实现延迟开启**
 
 在 `src/components/canvas/ProtoCanvas.vue` 中：
 
@@ -2405,12 +2405,12 @@ function onPaneReady(instance: VueFlowStore) {
 defineExpose({ nodes, edges, targetNodes, resetLayout, focusNode, markDragged, fitAll, onPaneReady, onNodesReady })
 ```
 
-- [ ] **Step 8: 运行测试，确认通过**
+- [x] **Step 8: 运行测试，确认通过**
 
 Run: `pnpm test --run src/components/canvas`
 Expected: PASS。
 
-- [ ] **Step 9: 接进播放页**
+- [x] **Step 9: 接进播放页**
 
 在 `src/pages/s/[id].vue` 中引入搜索组件，并只对节点多的场景开启裁剪与搜索：
 
@@ -2439,7 +2439,7 @@ const searchableNodes = computed(() =>
         :enable-visibility-culling="isLargeScene"
 ```
 
-- [ ] **Step 10: 浏览器实测（关键）**
+- [x] **Step 10: 浏览器实测（关键）**
 
 ```bash
 pnpm build && pnpm preview
@@ -2458,7 +2458,7 @@ console.log('视口：', getComputedStyle(document.querySelector('.vue-flow__tra
 Expected：尺寸为非零值，视口 transform 不是 `matrix(1, 0, 0, 1, 0, 0)`。
 若尺寸仍是 0×0，**立即把 `isLargeScene` 传给 `enable-visibility-culling` 的那一行改回 `false`**，在提交信息中记录实测结论，并把性能观察留到 Task 14。
 
-- [ ] **Step 11: 提交**
+- [x] **Step 11: 提交**
 
 ```bash
 git add src/components src/pages
@@ -2477,7 +2477,7 @@ git commit -m "feat(canvas): 全景图支持节点搜索，并在节点测量完
 - Consumes: Task 1 的辅助
 - Produces: `d3Pollution: Scene`
 
-- [ ] **Step 1: 写失败的测试**
+- [x] **Step 1: 写失败的测试**
 
 写入 `src/scenes/__tests__/d3-pollution.test.ts`：
 
@@ -2524,12 +2524,12 @@ describe('场景 d3：原型污染', () => {
 })
 ```
 
-- [ ] **Step 2: 运行测试，确认失败**
+- [x] **Step 2: 运行测试，确认失败**
 
 Run: `pnpm test --run src/scenes/__tests__/d3-pollution.test.ts`
 Expected: FAIL，找不到模块。
 
-- [ ] **Step 3: 写场景数据**
+- [x] **Step 3: 写场景数据**
 
 写入 `src/scenes/d3-pollution.ts`：
 
@@ -2660,14 +2660,14 @@ export const d3Pollution: Scene = {
 }
 ```
 
-- [ ] **Step 4: 注册并运行测试**
+- [x] **Step 4: 注册并运行测试**
 
 在 `src/scenes/index.ts` 中 import `d3Pollution` 并加入 `scenes`。
 
 Run: `pnpm test --run src/scenes`
 Expected: PASS。
 
-- [ ] **Step 5: 提交**
+- [x] **Step 5: 提交**
 
 ```bash
 git add src/scenes
@@ -2688,7 +2688,7 @@ git commit -m "feat(scenes): 新增原型污染场景，演示一次写入波及
   - `SceneGroup = { id: 'A' | 'B' | 'C' | 'D', title: string, subtitle: string, scenes: Scene[] }`
   - `sceneGroups: SceneGroup[]`
 
-- [ ] **Step 1: 写失败的测试**
+- [x] **Step 1: 写失败的测试**
 
 写入 `src/scenes/__tests__/registry.test.ts`：
 
@@ -2741,12 +2741,12 @@ describe('场景注册表', () => {
 })
 ```
 
-- [ ] **Step 2: 运行测试，确认失败**
+- [x] **Step 2: 运行测试，确认失败**
 
 Run: `pnpm test --run src/scenes/__tests__/registry.test.ts`
 Expected: FAIL，`sceneGroups` 尚未导出。
 
-- [ ] **Step 3: 实现注册表分组**
+- [x] **Step 3: 实现注册表分组**
 
 改写 `src/scenes/index.ts`：
 
@@ -2806,12 +2806,12 @@ export function getScene(id: string): Scene | undefined {
 }
 ```
 
-- [ ] **Step 4: 运行测试，确认通过**
+- [x] **Step 4: 运行测试，确认通过**
 
 Run: `pnpm test --run src/scenes/__tests__/registry.test.ts`
 Expected: PASS，8 条全绿。
 
-- [ ] **Step 5: 改写列表页**
+- [x] **Step 5: 改写列表页**
 
 写入 `src/pages/index.vue`：
 
@@ -2933,7 +2933,7 @@ a:hover {
 </style>
 ```
 
-- [ ] **Step 6: 全量验证并提交**
+- [x] **Step 6: 全量验证并提交**
 
 ```bash
 pnpm test --run
@@ -2955,7 +2955,7 @@ git commit -m "feat(scenes): 场景列表按 A/B/C/D 分组展示"
 - Consumes: 全部 13 个场景与既有组件
 - Produces: 一份填好结论的走查记录
 
-- [ ] **Step 1: 建立走查清单**
+- [x] **Step 1: 建立走查清单**
 
 写入 `docs/superpowers/checklists/2026-09-11-一期走查.md`：
 
@@ -2985,34 +2985,34 @@ git commit -m "feat(scenes): 场景列表按 A/B/C/D 分组展示"
 
 ## 全局检查项
 
-- [ ] 列表页四组齐全，13 个链接全部可达
-- [ ] 深链 `?step=&theme=` 在每组各抽一个场景验证
+- [x] 列表页四组齐全，13 个链接全部可达
+- [x] 深链 `?step=&theme=` 在每组各抽一个场景验证
 - [ ] 导出 PNG 在 d2（最大的图）上仍能完成，且导出后主题正确还原
-- [ ] d2 的搜索能定位到 `Array.prototype` 并聚焦
-- [ ] d2 播放时帧率主观流畅（若卡顿，记录是否已开启可见性裁剪）
-- [ ] 切换主题后无任何元素颜色不跟随
-- [ ] 窄窗口（1024 宽）下浮层不遮挡图的主体
+- [x] d2 的搜索能定位到 `Array.prototype` 并聚焦
+- [x] d2 播放时帧率主观流畅（若卡顿，记录是否已开启可见性裁剪）
+- [x] 切换主题后无任何元素颜色不跟随
+- [x] 窄窗口（1024 宽）下浮层不遮挡图的主体
 
 ## 结论
 
 （走查完成后填写：发现的问题、已修复项、遗留项）
 ```
 
-- [ ] **Step 2: 静态检查硬编码色值**
+- [x] **Step 2: 静态检查硬编码色值**
 
 ```bash
 grep -rnE '#[0-9a-fA-F]{3,8}\b|rgba?\(' src/components src/pages src/App.vue --include='*.vue'
 ```
 Expected: 无输出。若有输出，说明新增组件里混入了硬编码颜色，必须改为 token。
 
-- [ ] **Step 3: 逐场景走查并填表**
+- [x] **Step 3: 逐场景走查并填表**
 
 ```bash
 pnpm build && pnpm preview
 ```
 按清单逐项走查，把结论填进表格。**发现问题就地修复并单独提交**，不要攒到最后。
 
-- [ ] **Step 4: 全量验证**
+- [x] **Step 4: 全量验证**
 
 ```bash
 pnpm test --run
@@ -3021,7 +3021,7 @@ pnpm build
 ```
 Expected: 三条命令退出码均为 0。
 
-- [ ] **Step 5: 提交走查记录**
+- [x] **Step 5: 提交走查记录**
 
 ```bash
 git add docs/superpowers/checklists
@@ -3032,13 +3032,13 @@ git commit -m "docs: 记录一期双主题走查结论"
 
 ## 完成标准（计划二验收清单）
 
-- [ ] `pnpm test --run` 全绿，13 个场景各自有内容正确性断言
-- [ ] `pnpm lint` 与 `pnpm build` 退出码均为 0
-- [ ] 列表页四组齐全，13 个场景全部可达
-- [ ] 每个场景在两个主题下都已走查并记录结论
-- [ ] d2 全景图可搜索、可折叠，播放流畅
-- [ ] 组件与页面中零硬编码色值
-- [ ] 走查记录已填写并提交
+- [x] `pnpm test --run` 全绿，13 个场景各自有内容正确性断言
+- [x] `pnpm lint` 与 `pnpm build` 退出码均为 0
+- [x] 列表页四组齐全，13 个场景全部可达
+- [x] 每个场景在两个主题下都已走查并记录结论
+- [x] d2 全景图可搜索、可折叠，播放流畅
+- [x] 组件与页面中零硬编码色值
+- [x] 走查记录已填写并提交
 
 ## 风险
 
