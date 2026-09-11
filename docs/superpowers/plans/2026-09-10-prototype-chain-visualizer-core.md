@@ -559,7 +559,7 @@ git commit -m "feat(core): 实现不可变的图 patch 引擎与场景重放"
 **布局规则**（原型链的图有严格语义，不能交给力导向随机摆）：
 
 1. **深度只用 `proto` 边计算**：没有 `proto` 出边的节点深度为 0；`X --proto--> Y` 则 `depth(X) = depth(Y) + 1`。
-2. **纵轴 = 深度**：深度越大越靠下（实例在下、`Object.prototype` 在上），`y = (maxDepth - depth) * rowHeight`。
+2. **纵轴 = 深度**：深度越大越靠下（实例在下、`Object.prototype` 在上），`y = depth * rowHeight`。深度 0 是链末端，位于最上方。
 3. **横轴 = 同层顺序**：同一深度内按 `graph.nodes` 的数组顺序，`x = index * colWidth`。顺序稳定，保证场景步进时节点不乱跳。
 4. **函数节点贴着它的原型放**：若存在 `F --prototype--> P`，把 `F` 挪到 `P` 的同一行、左边一列（`x = x(P) - colWidth`，被占用则继续左移一列）。
 5. **环保护**：`proto` 边在 JS 里不可能成环，但场景数据可能写错——递归带 visited 集合，遇到环时该节点深度取 0 并 `console.warn`，不允许栈溢出。
@@ -715,8 +715,6 @@ export function layout(graph: GraphState, opts: LayoutOptions = {}): Map<string,
   for (const n of graph.nodes)
     depthOf(n.id, new Set())
 
-  const maxDepth = Math.max(0, ...graph.nodes.map(n => depthCache.get(n.id) ?? 0))
-
   // 同层内按节点数组顺序横向排开，顺序稳定，步进时不会乱跳
   const seatByDepth = new Map<number, number>()
   const pos = new Map<string, Point>()
@@ -725,7 +723,8 @@ export function layout(graph: GraphState, opts: LayoutOptions = {}): Map<string,
     const d = depthCache.get(n.id) ?? 0
     const seat = seatByDepth.get(d) ?? 0
     seatByDepth.set(d, seat + 1)
-    pos.set(n.id, { x: seat * colWidth, y: (maxDepth - d) * rowHeight })
+    // 深度 0 是链末端（Object.prototype 一侧），放最上面；越往下越靠近实例
+    pos.set(n.id, { x: seat * colWidth, y: d * rowHeight })
   }
 
   // 函数节点贴着它的 prototype 节点放：同一行、左边一列
