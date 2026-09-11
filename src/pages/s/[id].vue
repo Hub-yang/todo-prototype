@@ -3,6 +3,7 @@ import { onKeyStroke } from '@vueuse/core'
 import { computed, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import ProtoCanvas from '~/components/canvas/ProtoCanvas.vue'
+import ExportButton from '~/components/ExportButton.vue'
 import CodePanel from '~/components/panels/CodePanel.vue'
 import StepPanel from '~/components/panels/StepPanel.vue'
 import { useExplore } from '~/composables/useExplore'
@@ -20,6 +21,8 @@ const player = usePlayer(scene)
 const explore = useExplore(player.graph)
 
 const canvasRef = ref<InstanceType<typeof ProtoCanvas> | null>(null)
+/** 导出只截画布区域，浮层与按钮是操作界面，不该出现在配图里 */
+const canvasAreaRef = ref<HTMLElement | null>(null)
 const copied = ref(false)
 
 /** 只有当前步声明了 traverse 才让连线流动，静止时保持实线 */
@@ -60,16 +63,18 @@ onKeyStroke(' ', (e) => {
 
 <template>
   <div class="stage">
-    <ProtoCanvas
-      ref="canvasRef"
-      :graph="player.graph.value"
-      :flowing-edges="flowingEdges"
-      :dimmed-nodes="explore.dimmedNodes.value"
-      :highlighted-nodes="explore.highlightedNodes.value"
-      :highlighted-edges="explore.highlightedEdges.value"
-      @node-hover="explore.setHover"
-      @focus-ref="onFocusRef"
-    />
+    <div ref="canvasAreaRef" class="canvas-area">
+      <ProtoCanvas
+        ref="canvasRef"
+        :graph="player.graph.value"
+        :flowing-edges="flowingEdges"
+        :dimmed-nodes="explore.dimmedNodes.value"
+        :highlighted-nodes="explore.highlightedNodes.value"
+        :highlighted-edges="explore.highlightedEdges.value"
+        @node-hover="explore.setHover"
+        @focus-ref="onFocusRef"
+      />
+    </div>
 
     <CodePanel :code="scene.code" :highlight="player.current.value?.codeRange" />
 
@@ -90,6 +95,10 @@ onKeyStroke(' ', (e) => {
       <button data-share @click="copyShare">
         {{ copied ? '✓ 已复制' : '🔗 复制分享链接' }}
       </button>
+      <ExportButton
+        :target="canvasAreaRef"
+        :filename="`${scene.id}-step${player.step.value}.png`"
+      />
     </div>
   </div>
 </template>
@@ -97,6 +106,11 @@ onKeyStroke(' ', (e) => {
 <style scoped>
 .stage {
   position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+.canvas-area {
   width: 100%;
   height: 100%;
 }
