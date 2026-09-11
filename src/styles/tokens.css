@@ -1,0 +1,86 @@
+/* 三套主题的 design token。组件中禁止出现任何颜色字面量。 */
+:root,
+[data-theme='aurora'] {
+  --canvas-bg: #0a0f24;
+  --canvas-grid: #1a2340;
+  --canvas-glow-a: rgb(124 58 237 / 33%);
+  --canvas-glow-b: rgb(6 182 212 / 33%);
+
+  --node-surface: rgb(255 255 255 / 6%);
+  --node-border: rgb(255 255 255 / 18%);
+  --node-header: rgb(255 255 255 / 8%);
+
+  --text-primary: #f3f6ff;
+  --text-muted: #c3cbe6;
+
+  --edge-prototype: #22d3ee;
+  --edge-proto: #f472b6;
+  --edge-constructor: #64748b;
+
+  --glow-size: 6px;
+  --glow-color: rgb(244 114 182 / 60%);
+  --focus-dim: 0.22;
+
+  --panel-bg: rgb(17 26 51 / 88%);
+  --panel-blur: 10px;
+}
+
+[data-theme='neon'] {
+  --canvas-bg: #05060f;
+  --canvas-grid: #16224a;
+  --canvas-glow-a: transparent;
+  --canvas-glow-b: transparent;
+
+  --node-surface: #0c1428;
+  --node-border: #22d3ee;
+  --node-header: rgb(34 211 238 / 12%);
+
+  --text-primary: #eaf2ff;
+  --text-muted: #8ea6cf;
+
+  --edge-prototype: #22d3ee;
+  --edge-proto: #f472b6;
+  --edge-constructor: #475569;
+
+  --glow-size: 10px;
+  --glow-color: rgb(34 211 238 / 75%);
+  --focus-dim: 0.15;
+
+  --panel-bg: rgb(5 6 15 / 92%);
+  --panel-blur: 8px;
+}
+
+/* paper 仅用于导出，不进主题切换器 */
+[data-theme='paper'] {
+  --canvas-bg: #f7f9fe;
+  --canvas-grid: #e8eefa;
+  --canvas-glow-a: transparent;
+  --canvas-glow-b: transparent;
+
+  --node-surface: #fff;
+  --node-border: #c7d2fe;
+  --node-header: #eef2ff;
+
+  --text-primary: #1e293b;
+  --text-muted: #64748b;
+
+  --edge-prototype: #6366f1;
+  --edge-proto: #db2777;
+  --edge-constructor: #94a3b8;
+
+  --glow-size: 0;
+  --glow-color: transparent;
+  --focus-dim: 0.35;
+
+  --panel-bg: #fff;
+  --panel-blur: 0;
+}
+
+html,
+body,
+#app {
+  height: 100%;
+  margin: 0;
+  background: var(--canvas-bg);
+  color: var(--text-primary);
+}
