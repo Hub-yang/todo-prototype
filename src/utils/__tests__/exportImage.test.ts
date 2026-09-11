@@ -62,4 +62,34 @@ describe('exportPng', () => {
     await exportPng(el, 'x.png')
     expect(toPng.mock.calls[0][0]).toBe(el)
   })
+
+  it('导出卡住时会超时报错，并且照样还原主题', async () => {
+    // 真实环境中 html-to-image 可能一直不 resolve；没有超时兜底的话，
+    // 用户会永远卡在白色的 paper 主题里，按钮也一直是「导出中…」
+    toPng.mockImplementationOnce(() => new Promise(() => {}))
+
+    await expect(
+      exportPng(document.createElement('div'), 'x.png', { timeoutMs: 50 }),
+    ).rejects.toThrow(/超时/)
+
+    expect(document.documentElement.dataset.theme).toBe('aurora')
+  })
+
+  it('不使用 cacheBust：它会重新拉取每个引用资源，任何一个挂起都会卡死导出', async () => {
+    await exportPng(document.createElement('div'), 'x.png')
+    expect(toPng.mock.calls[0][1]).not.toHaveProperty('cacheBust', true)
+  })
+
+  it('标签页不可见、requestAnimationFrame 停摆时，导出照样能完成', async () => {
+    // 浏览器在标签页隐藏时会暂停 rAF。若用它来等待样式生效，
+    // 用户导出途中切走标签，导出就会永久卡住、主题停在白色 paper。
+    const raf = vi.spyOn(window, 'requestAnimationFrame').mockImplementation(() => 0)
+
+    await expect(
+      exportPng(document.createElement('div'), 'x.png', { timeoutMs: 500 }),
+    ).resolves.toBeUndefined()
+
+    expect(document.documentElement.dataset.theme).toBe('aurora')
+    raf.mockRestore()
+  })
 })

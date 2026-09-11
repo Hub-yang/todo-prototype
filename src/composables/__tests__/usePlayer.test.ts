@@ -99,4 +99,18 @@ describe('usePlayer', () => {
     await nextTick()
     expect(p.step.value).toBe(0)
   })
+
+  it('可以指定初始步数，使首次渲染就停在该步', () => {
+    // 深链进入时必须在渲染前就位；放到 onMounted 里补设会让图慢一拍，
+    // 出现「讲解已是第 2 步、图还停在第 0 步」的错位
+    const p = usePlayer(ref(scene), { initialStep: 2 })
+    expect(p.step.value).toBe(2)
+    expect(p.graph.value.edges).toHaveLength(1)
+    expect(p.current.value?.title).toBe('二')
+  })
+
+  it('初始步数越界时被夹到合法范围', () => {
+    expect(usePlayer(ref(scene), { initialStep: 99 }).step.value).toBe(2)
+    expect(usePlayer(ref(scene), { initialStep: -3 }).step.value).toBe(0)
+  })
 })

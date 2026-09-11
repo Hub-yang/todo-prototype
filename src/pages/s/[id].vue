@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { onKeyStroke } from '@vueuse/core'
-import { computed, onMounted, ref, watch } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import ProtoCanvas from '~/components/canvas/ProtoCanvas.vue'
 import ExportButton from '~/components/ExportButton.vue'
@@ -17,7 +17,14 @@ const router = useRouter()
 const { theme, setTheme } = useTheme()
 
 const scene = computed(() => getScene(String(route.params.id)) ?? scenes[0])
-const player = usePlayer(scene)
+
+// 深链参数必须在首次渲染前读出：放到 onMounted 里补设会让图慢一拍，
+// 出现「讲解已是第 2 步、图还停在第 0 步」的错位。
+const fromLink = parseShareQuery(route.query)
+if (fromLink.theme)
+  setTheme(fromLink.theme)
+
+const player = usePlayer(scene, { initialStep: fromLink.step })
 const explore = useExplore(player.graph)
 
 const canvasRef = ref<InstanceType<typeof ProtoCanvas> | null>(null)
@@ -32,14 +39,6 @@ const flowingEdges = computed(() => player.current.value?.traverse ?? [])
 function onFocusRef(nodeId: string) {
   canvasRef.value?.focusNode(nodeId)
 }
-
-// 进入页面时按链接参数还原进度与主题
-onMounted(() => {
-  const { step, theme: fromLink } = parseShareQuery(route.query)
-  if (fromLink)
-    setTheme(fromLink)
-  player.goto(step)
-})
 
 // 步进时把进度同步进地址栏，这样任何时刻复制地址都能还原当前画面
 watch(player.step, (s) => {

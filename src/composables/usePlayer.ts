@@ -6,11 +6,21 @@ import { replay } from '~/core'
 export interface PlayerOptions {
   /** 自动播放时每步停留的毫秒数 */
   interval?: number
+  /**
+   * 首次渲染就停在这一步，用于深链还原。
+   * 必须在这里给出，而不是挂载后再补设——否则图会慢一拍，
+   * 出现「讲解已是第 2 步、图还停在第 0 步」的错位。
+   */
+  initialStep?: number
+}
+
+function clamp(n: number, max: number) {
+  return Math.max(0, Math.min(n, max))
 }
 
 export function usePlayer(scene: Ref<Scene>, options: PlayerOptions = {}) {
   const interval = options.interval ?? 2200
-  const step = ref(0)
+  const step = ref(clamp(options.initialStep ?? 0, scene.value.steps.length))
   const playing = ref(false)
   let timer: ReturnType<typeof setInterval> | null = null
 
@@ -28,7 +38,7 @@ export function usePlayer(scene: Ref<Scene>, options: PlayerOptions = {}) {
   }
 
   function goto(n: number) {
-    step.value = Math.max(0, Math.min(n, total.value))
+    step.value = clamp(n, total.value)
   }
 
   function next() {
