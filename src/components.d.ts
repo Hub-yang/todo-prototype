@@ -13,6 +13,7 @@ declare module 'vue' {
   export interface GlobalComponents {
     CodePanel: typeof import('./components/panels/CodePanel.vue')['default']
     ExportButton: typeof import('./components/ExportButton.vue')['default']
+    NodeSearch: typeof import('./components/canvas/NodeSearch.vue')['default']
     ProtoCanvas: typeof import('./components/canvas/ProtoCanvas.vue')['default']
     ProtoEdge: typeof import('./components/canvas/ProtoEdge.vue')['default']
     ProtoNode: typeof import('./components/canvas/ProtoNode.vue')['default']
