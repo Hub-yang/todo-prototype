@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { layout, protoChain, replay } from '~/core'
+import { graphBounds, layout, protoChain, replay } from '~/core'
 import { d2Builtins } from '../d2-builtins'
 import { expectSceneIntegrity, hasEdge } from './helpers'
 
@@ -42,5 +42,21 @@ describe('场景 d2：内置对象全景图', () => {
 
   it('布局算法能给这张大图的每个节点排出坐标', () => {
     expect(layout(final).size).toBe(final.nodes.length)
+  })
+
+  it('整张图不横向失控，缩放后仍能看清骨架', () => {
+    // 7 个构造函数横排时图宽 3640px，1440 视口整体适配后缩放只剩 0.27；
+    // 构造函数改为竖排后宽度腰斩，缩放回到 0.4 以上。
+    const width = graphBounds(layout(final)).width
+    expect(width).toBeLessThan(2200)
+  })
+
+  it('没有两个节点被排到同一个坐标上', () => {
+    const seen = new Set<string>()
+    for (const [id, pt] of layout(final)) {
+      const key = `${pt.x},${pt.y}`
+      expect(seen.has(key), `${id} 与另一个节点同处 ${key}`).toBe(false)
+      seen.add(key)
+    }
   })
 })

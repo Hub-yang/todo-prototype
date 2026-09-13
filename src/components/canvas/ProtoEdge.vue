@@ -4,6 +4,11 @@ import type { EdgeKind } from '~/core'
 import { BaseEdge, EdgeLabelRenderer, getSmoothStepPath } from '@vue-flow/core'
 import { computed } from 'vue'
 
+/** 只取判断行位置需要的字段；Vue Flow 传进来的是完整的 GraphNode */
+interface EdgeNode {
+  position: { x: number, y: number }
+}
+
 const props = defineProps<{
   id: string
   sourceX: number
@@ -13,6 +18,8 @@ const props = defineProps<{
   sourcePosition: Position
   targetPosition: Position
   data: { kind: EdgeKind, flowing: boolean, dimmed: boolean, highlighted?: boolean, label?: string }
+  sourceNode?: EdgeNode
+  targetNode?: EdgeNode
 }>()
 
 const path = computed(() => getSmoothStepPath({
@@ -26,13 +33,60 @@ const path = computed(() => getSmoothStepPath({
 }))
 
 /**
+ * 标签抬离节点上边缘的距离，按边的语义分层。
+ *
+ * 同一对节点之间可能同时挂着两条边——d1 的 Function 既有 prototype 边指向
+ * Function.prototype，又有 proto 边指向它（这正是那一场的教学点）。两条边的中点完全相同，
+ * 抬升量再一样，两个标签就会严丝合缝地叠在一起。按 kind 分成两层，各占行间空隙的一半
+ * （行高 220 减去节点高，空隙够放两层 21px 的标签）。
+ * constructor 边不带标签，给它什么值都不影响画面。
+ */
+const LIFT_BY_KIND: Record<EdgeKind, number> = {
+  proto: 16,
+  prototype: 42,
+  constructor: 16,
+}
+
+/**
  * 标签从路径中点往起点方向拉。中点往往正好贴着目标节点的边缘，
  * 直接用中点会把标签压在目标节点的属性行上。
+ *
+ * 两种边不走这个算法，都改放到「较低那一行的上方空隙」里：
+ *
+ * - 同层边：d1 那样每层只有两个节点时，列宽减去节点宽只剩几像素缝隙，
+ *   而标签宽约 90px，横着塞进去必然压住相邻节点。
+ * - 向下的边：d1 的 Object --proto--> Function.prototype 是条罕见的向下边，
+ *   往起点拉的结果是标签整个落回 Object 节点内部。
+ *
+ * 同层判定看的是两个节点的行，不是两端 handle 的 y——handle 落在不同属性行上，
+ * 高度本就会差几十像素。
  */
-const labelPos = computed(() => ({
-  x: props.sourceX * 0.42 + path.value[1] * 0.58,
-  y: props.sourceY * 0.42 + path.value[2] * 0.58,
-}))
+const labelPos = computed(() => {
+  const source = props.sourceNode
+  const target = props.targetNode
+  const lift = LIFT_BY_KIND[props.data.kind]
+
+  if (source && target) {
+    if (source.position.y === target.position.y) {
+      return {
+        x: (props.sourceX + props.targetX) / 2,
+        y: source.position.y - lift,
+      }
+    }
+
+    if (target.position.y > source.position.y) {
+      return {
+        x: props.sourceX * 0.42 + path.value[1] * 0.58,
+        y: target.position.y - lift,
+      }
+    }
+  }
+
+  return {
+    x: props.sourceX * 0.42 + path.value[1] * 0.58,
+    y: props.sourceY * 0.42 + path.value[2] * 0.58,
+  }
+})
 </script>
 
 <template>
