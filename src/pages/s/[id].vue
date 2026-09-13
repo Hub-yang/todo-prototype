@@ -1,12 +1,13 @@
 <script setup lang="ts">
 import { onKeyStroke } from '@vueuse/core'
-import { computed, ref, watch } from 'vue'
+import { computed, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import NodeSearch from '~/components/canvas/NodeSearch.vue'
 import ProtoCanvas from '~/components/canvas/ProtoCanvas.vue'
 import ExportButton from '~/components/ExportButton.vue'
 import CodePanel from '~/components/panels/CodePanel.vue'
 import StepPanel from '~/components/panels/StepPanel.vue'
+import { useDeepLink } from '~/composables/useDeepLink'
 import { useExplore } from '~/composables/useExplore'
 import { usePlayer } from '~/composables/usePlayer'
 import { buildShareUrl, parseShareQuery } from '~/composables/useShareLink'
@@ -28,6 +29,17 @@ if (fromLink.theme)
 const player = usePlayer(scene, { initialStep: fromLink.step })
 const explore = useExplore(player.graph)
 
+// 地址栏与进度的双向同步。必须注册在 usePlayer 之后：
+// 换场景时 usePlayer 先把步数归零，这里再按新场景的深链参数改回去。
+useDeepLink({
+  sceneId: computed(() => String(route.params.id)),
+  query: () => route.query,
+  step: player.step,
+  goto: player.goto,
+  setTheme,
+  replaceQuery: query => router.replace({ query }),
+})
+
 const canvasRef = ref<InstanceType<typeof ProtoCanvas> | null>(null)
 /** 导出只截画布区域，浮层与按钮是操作界面，不该出现在配图里 */
 const canvasAreaRef = ref<HTMLElement | null>(null)
@@ -45,11 +57,6 @@ const flowingEdges = computed(() => player.current.value?.traverse ?? [])
 function onFocusRef(nodeId: string) {
   canvasRef.value?.focusNode(nodeId)
 }
-
-// 步进时把进度同步进地址栏，这样任何时刻复制地址都能还原当前画面
-watch(player.step, (s) => {
-  router.replace({ query: { ...route.query, step: String(s) } })
-})
 
 async function copyShare() {
   const url = buildShareUrl(window.location.origin, scene.value.id, player.step.value, theme.value)
