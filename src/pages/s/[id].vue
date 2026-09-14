@@ -109,10 +109,12 @@ onKeyStroke(' ', (e) => {
 
     <div class="tools">
       <button @click="canvasRef?.resetLayout()">
-        ⟲ 重置布局
+        <span class="i-ph-arrow-counter-clockwise-bold" />
+        重置布局
       </button>
       <button data-share @click="copyShare">
-        {{ copied ? '✓ 已复制' : '🔗 复制分享链接' }}
+        <span :class="copied ? 'i-ph-check-bold' : 'i-ph-link-simple-bold'" />
+        {{ copied ? '已复制' : '复制分享链接' }}
       </button>
       <ExportButton
         :target="canvasAreaRef"
@@ -143,6 +145,9 @@ onKeyStroke(' ', (e) => {
 }
 
 .tools button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
   padding: 5px 14px;
   border: 1px solid var(--node-border);
   border-radius: 999px;

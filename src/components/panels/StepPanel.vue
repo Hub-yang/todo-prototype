@@ -20,8 +20,17 @@ const collapsed = ref(false)
 
 <template>
   <div class="panel" :data-collapsed="String(collapsed)">
-    <button class="collapse" @click="collapsed = !collapsed">
-      {{ collapsed ? '讲解 ▴' : '▾' }}
+    <button
+      class="collapse"
+      data-collapse
+      :aria-label="collapsed ? '展开讲解' : '折叠讲解'"
+      :title="collapsed ? '展开讲解' : '折叠讲解'"
+      @click="collapsed = !collapsed"
+    >
+      <template v-if="collapsed">
+        讲解
+      </template>
+      <span :class="collapsed ? 'i-ph-caret-up-bold' : 'i-ph-caret-down-bold'" />
     </button>
 
     <template v-if="!collapsed">
@@ -34,18 +43,39 @@ const collapsed = ref(false)
         {{ current.narration }}
       </p>
       <p v-else class="narration muted">
-        点「播放」开始，或用 ← → 逐步查看
+        点「播放」开始，或用
+        <span class="i-ph-caret-left-bold key" />
+        <span class="i-ph-caret-right-bold key" />
+        逐步查看
       </p>
 
       <div class="ctl">
-        <button :disabled="step === 0" @click="emit('prev')">
-          ◀
+        <button
+          data-prev
+          :disabled="step === 0"
+          aria-label="上一步"
+          title="上一步"
+          @click="emit('prev')"
+        >
+          <span class="i-ph-caret-left-bold" />
         </button>
-        <button class="primary" @click="emit('togglePlay')">
-          {{ playing ? '⏸ 暂停' : '▶ 播放' }}
+        <button
+          class="primary"
+          data-play
+          :aria-label="playing ? '暂停' : '播放'"
+          @click="emit('togglePlay')"
+        >
+          <span :class="playing ? 'i-ph-pause-fill' : 'i-ph-play-fill'" />
+          {{ playing ? '暂停' : '播放' }}
         </button>
-        <button :disabled="step === total" @click="emit('next')">
-          ▶
+        <button
+          data-next
+          :disabled="step === total"
+          aria-label="下一步"
+          title="下一步"
+          @click="emit('next')"
+        >
+          <span class="i-ph-caret-right-bold" />
         </button>
         <div class="bar">
           <i :style="{ width: `${total ? (step / total) * 100 : 0}%` }" />
@@ -80,6 +110,9 @@ const collapsed = ref(false)
 }
 
 .collapse {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
   float: right;
   border: 0;
   background: transparent;
@@ -113,6 +146,9 @@ const collapsed = ref(false)
 }
 
 .ctl button {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
   padding: 3px 12px;
   border: 1px solid var(--node-border);
   border-radius: 8px;
@@ -128,6 +164,11 @@ const collapsed = ref(false)
 
 .ctl .primary {
   border-color: var(--edge-prototype);
+}
+
+/* 正文里提到的方向键，压低一点基线才不会顶着行高 */
+.key {
+  vertical-align: -0.12em;
 }
 
 .bar {

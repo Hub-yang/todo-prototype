@@ -13,14 +13,14 @@ const emit = defineEmits<{ focusRef: [nodeId: string] }>()
 const collapsed = ref(props.data.node.meta?.collapsed ?? false)
 const node = computed(() => props.data.node)
 
-/** 不同 kind 用不同的标题前缀，一眼区分函数与对象 */
+/** 不同 kind 用不同的标题图标，一眼区分函数与对象 */
 const sigil = computed(() => {
   switch (node.value.kind) {
-    case 'function': return 'ƒ'
-    case 'prototype': return '⟐'
-    case 'instance': return '▪'
-    case 'null': return '∅'
-    default: return '·'
+    case 'function': return 'i-ph-function-bold'
+    case 'prototype': return 'i-ph-cube-bold'
+    case 'instance': return 'i-ph-dot-outline-fill'
+    case 'null': return 'i-ph-prohibit-bold'
+    default: return 'i-ph-brackets-curly-bold'
   }
 })
 
@@ -47,9 +47,13 @@ function onRowClick(refTo?: string) {
     <Handle id="t-right" type="target" :position="Position.Right" />
 
     <div data-node-header class="header" @click="collapsed = !collapsed">
-      <span class="sigil">{{ sigil }}</span>
+      <span data-sigil class="sigil" :class="sigil" />
       <span class="label">{{ node.label }}</span>
-      <span class="chevron">{{ collapsed ? '▸' : '▾' }}</span>
+      <span
+        data-chevron
+        class="chevron"
+        :class="collapsed ? 'i-ph-caret-right-bold' : 'i-ph-caret-down-bold'"
+      />
     </div>
 
     <div v-if="!collapsed" class="rows">
@@ -101,11 +105,17 @@ function onRowClick(refTo?: string) {
   user-select: none;
 }
 
+.sigil {
+  flex: none;
+  color: var(--text-muted);
+}
+
 .label {
   font-weight: 600;
 }
 
 .chevron {
+  flex: none;
   margin-left: auto;
   color: var(--text-muted);
 }

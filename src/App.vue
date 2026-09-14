@@ -7,7 +7,16 @@ const { theme, toggle } = useTheme()
 <template>
   <div class="app">
     <RouterView />
-    <button class="theme-toggle" @click="toggle">
+    <button
+      class="theme-toggle"
+      data-theme-toggle
+      :aria-label="theme === 'aurora' ? '切换到霓虹主题' : '切换到极光主题'"
+      @click="toggle"
+    >
+      <span
+        data-theme-icon
+        :class="theme === 'aurora' ? 'i-ph-sun-bold' : 'i-ph-moon-stars-bold'"
+      />
       {{ theme === 'aurora' ? '极光' : '霓虹' }}
     </button>
   </div>
@@ -22,6 +31,9 @@ const { theme, toggle } = useTheme()
 
 .theme-toggle {
   position: fixed;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
   top: 20px;
   right: 20px;
   z-index: 10;

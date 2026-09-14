@@ -33,18 +33,29 @@ async function onExport() {
 const label = computed(() => {
   if (busy.value)
     return '导出中…'
-  return failed.value ? '✗ 导出失败' : '⤓ 导出图片'
+  return failed.value ? '导出失败' : '导出图片'
+})
+
+// 三个状态各自写成完整字面量：UnoCSS 扫源文件文本提类名，拼接出来的扫不到
+const icon = computed(() => {
+  if (busy.value)
+    return 'i-ph-spinner-gap-bold spinning'
+  return failed.value ? 'i-ph-warning-circle-bold' : 'i-ph-download-simple-bold'
 })
 </script>
 
 <template>
-  <button data-export :disabled="busy" @click="onExport">
+  <button data-export :disabled="busy" :title="label" @click="onExport">
+    <span data-icon :class="icon" />
     {{ label }}
   </button>
 </template>
 
 <style scoped>
 button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
   padding: 5px 14px;
   border: 1px solid var(--node-border);
   border-radius: 999px;
@@ -57,5 +68,15 @@ button {
 button:disabled {
   opacity: 0.6;
   cursor: wait;
+}
+
+.spinning {
+  animation: spin 0.9s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(1turn);
+  }
 }
 </style>

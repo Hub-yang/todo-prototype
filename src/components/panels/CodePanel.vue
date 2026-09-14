@@ -22,8 +22,13 @@ function isActive(lineNo: number) {
   <div class="panel">
     <div class="bar">
       <span class="name">code.js</span>
-      <button data-collapse @click="collapsed = !collapsed">
-        {{ collapsed ? '▸' : '▾' }}
+      <button
+        data-collapse
+        :aria-label="collapsed ? '展开代码' : '折叠代码'"
+        :title="collapsed ? '展开代码' : '折叠代码'"
+        @click="collapsed = !collapsed"
+      >
+        <span :class="collapsed ? 'i-ph-caret-right-bold' : 'i-ph-caret-down-bold'" />
       </button>
     </div>
 
@@ -64,6 +69,7 @@ function isActive(lineNo: number) {
 }
 
 .bar button {
+  display: inline-flex;
   margin-left: auto;
   border: 0;
   background: transparent;

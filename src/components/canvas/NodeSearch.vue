@@ -25,7 +25,10 @@ function pick(id: string) {
 
 <template>
   <div class="search">
-    <input v-model="keyword" type="search" placeholder="搜索节点，例如 Array">
+    <div class="field">
+      <span class="i-ph-magnifying-glass-bold icon" aria-hidden="true" />
+      <input v-model="keyword" type="search" placeholder="搜索节点，例如 Array">
+    </div>
 
     <ul v-if="keyword.trim()" class="hits">
       <li
@@ -53,9 +56,23 @@ function pick(id: string) {
   width: 220px;
 }
 
+/* 图标绝对定位压在输入框上，输入框用左内边距给它让位 */
+.field {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.field .icon {
+  position: absolute;
+  left: 10px;
+  color: var(--text-muted);
+  pointer-events: none;
+}
+
 input {
   width: 100%;
-  padding: 6px 12px;
+  padding: 6px 12px 6px 30px;
   border: 1px solid var(--node-border);
   border-radius: 999px;
   background: var(--panel-bg);

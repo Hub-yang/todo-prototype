@@ -68,4 +68,22 @@ describe('protoNode', () => {
     const w = mountNode({ node: { ...node, meta: { collapsed: true } } })
     expect(w.findAll('[data-prop-row]')).toHaveLength(0)
   })
+
+  it.each([
+    ['function', 'i-ph-function-bold'],
+    ['prototype', 'i-ph-cube-bold'],
+    ['instance', 'i-ph-dot-outline-fill'],
+    ['null', 'i-ph-prohibit-bold'],
+    ['plain', 'i-ph-brackets-curly-bold'],
+  ] as const)('kind=%s 的类型标记用图标 %s', (kind, icon) => {
+    const w = mountNode({ node: { ...node, kind } })
+    expect(w.find('[data-sigil]').classes()).toContain(icon)
+  })
+
+  it('折叠开关用尖角图标，展开朝下、折叠朝右', async () => {
+    const w = mountNode()
+    expect(w.find('[data-chevron]').classes()).toContain('i-ph-caret-down-bold')
+    await w.find('[data-node-header]').trigger('click')
+    expect(w.find('[data-chevron]').classes()).toContain('i-ph-caret-right-bold')
+  })
 })

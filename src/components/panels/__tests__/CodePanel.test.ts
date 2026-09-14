@@ -36,4 +36,16 @@ describe('codePanel', () => {
     const w = mount(CodePanel, { props: { code: 'a\n\nb' } })
     expect(w.findAll('[data-line]')).toHaveLength(3)
   })
+
+  it('折叠开关用尖角图标，展开朝下、折叠朝右', async () => {
+    const w = mount(CodePanel, { props: { code } })
+    expect(w.find('[data-collapse] > *').classes()).toContain('i-ph-caret-down-bold')
+    await w.find('[data-collapse]').trigger('click')
+    expect(w.find('[data-collapse] > *').classes()).toContain('i-ph-caret-right-bold')
+  })
+
+  it('纯图标的折叠按钮带无障碍名', () => {
+    const w = mount(CodePanel, { props: { code } })
+    expect(w.find('[data-collapse]').attributes('aria-label')).toBeTruthy()
+  })
 })
